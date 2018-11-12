@@ -5,9 +5,14 @@
         <div class="col-3"><router-link :to="'user/' + user.login">view</router-link></div>
         <div class="col-3"><router-link :to="'edit/' + user.login">edit</router-link></div>
       </div>
-    <div class="row justify-content-end border-top">
+    <div class="row justify-content-end border-top" style="padding: 12px;">
+      <div class="col-6" v-if="existsMoreUsers">
+        <button class="btn btn-primary" @click="getMoreUsers">Show more users</button>
+      </div>
       <div class="col-6">
-        <router-link to="../create">Create new user</router-link>
+        <router-link to="../create">
+          <button class="btn btn-primary">Create new user</button>
+        </router-link>
       </div>
     </div>
     <div class="row alert alert-danger" v-if="errMessage.length > 0">
@@ -22,14 +27,29 @@ export default {
   data() {
     return {
       users: [],
+      existsMoreUsers: true,
       errMessage: ''
     }
   },
   created() {
-    fetch('http://localhost:3000/api/users')
-        .then(res => res.json())
-        .then(users => this.users = users)
-        .catch(() => this.errMessage = "Can't load list of users. Please, try again later");
+    this.$store.dispatch('getUsers')
+        .then(users => {
+          this.users = users;
+          if (this.users.length === 0) {
+            this.errMessage = "There are not any users in user's list. Please, try again later"
+          }
+        });
+  },
+  methods: {
+    getMoreUsers() {
+      this.$store.dispatch('getMoreUsers')
+          .then(users => {
+            if (users.length === this.users.length) {
+              this.existsMoreUsers = false;
+            }
+            this.users = users;
+          });
+    }
   }
 };
 </script>

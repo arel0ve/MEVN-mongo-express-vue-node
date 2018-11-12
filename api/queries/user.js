@@ -2,19 +2,26 @@ const User = require('../schemas/user');
 
 
 function getAllUsers(req, res, next) {
-  User.find({}, 'login').then(users => {
-    res.status(200).json(users);
-  }).catch(e => {
-    console.log(e);
-    res.status(404).json({
-      message: 'Not Found'
-    });
-  });
+  User.find({})
+      .sort('login')
+      .skip(+req.query['from'])
+      .limit(+req.query['to'] - +req.query['from'])
+      .select('login')
+      .then(users => {
+        res.status(200).json(users);
+      }).catch(e => {
+        console.log(e);
+        res.status(404).json({
+          message: 'Not Found'
+        });
+      });
 }
 
 
 function getUserByLogin(req, res, next) {
-  User.findOne({ login: req.params.login }, 'login email firstName lastName country').then(user => {
+  User.findOne({ login: req.params.login })
+      .select('login email firstName lastName country')
+      .then(user => {
     res.status(200).json(user);
   }).catch((e => {
     console.log(e);

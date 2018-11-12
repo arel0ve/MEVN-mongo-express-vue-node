@@ -6,44 +6,71 @@ Vue.use(Vuex);
 
 export default new Vuex.Store({
   state: {
-    users: []
+    users: [],
+    from: 0,
+    to: 5
   },
   mutations: {
     addUser(state, newUser) {
       state.users.push(newUser)
     },
-    changeUser(state, {login, newUser}) {
-      // let userIndex = state.users.findIndex(u => u.login === login); // or below
-      // let userIndex = _.findIndex(state.users, {login: login});
-      // if (userIndex === -1) {
-      //   state.users.push(newUser);
-      // } else {
-      //   state.users.splice(userIndex, 1, Object.assign({login}, newUser));
-      // }
+    changeUser(state, { login, newUser }) {
       _.pullAllBy(state.users, [{login}], 'login');
       state.users.push(_.assign({login}, newUser));
     }
   },
   actions: {
-    getUser(context, {login}) {
-      return new Promise((resolve) => {
-        // let user = context.state.users.find(u => u.login === login);
-        let user = _.find(context.state.users, {login});
-        if (user) {
-          resolve(user)
+    getUsers(context) {
+      return new Promise(resolve => {
+        if (context.state.users.length) {
+          resolve(context.state.users);
+        } else {
+          context.dispatch('getMoreUsers').then(users => resolve(users));
+        }
+      })
+    },
+    getMoreUsers(context) {
+      return new Promise(resolve => {
+        fetch(`http://localhost:3000/api/users?from=${context.state.from}&to=${context.state.to}`)
+            .then(res => res.json())
+            .then(users => {
+              context.state.users = _.concat(context.state.users, users);
+              context.state.from += users.length > 0 ? 5 : 0;
+              resolve(context.state.users);
+            })
+            .catch(() => {
+              if (!context.state.users) {
+                resolve([]);
+              } else {
+                resolve(context.state.users);
+              }
+            });
+      })
+
+    },
+    getUser(context, { login }) {
+      return new Promise(resolve => {
+        let storeUser = _.find(context.state.users, { login });
+        console.log(storeUser);
+        if (storeUser && storeUser['email']) {
+          resolve(storeUser)
         } else {
           fetch('http://localhost:3000/api/user/' + login)
-              .then((res) => res.json())
-              .then((user) => {
+              .then(res => res.json())
+              .then(user => {
                 _.unset(user, '_id');
-                context.commit('addUser', user);
+                if (storeUser) {
+                  context.commit('changeUser', { login, newUser: user });
+                } else {
+                  context.commit('addUser', user);
+                }
                 resolve(user);
               })
               .catch(() => resolve({ }) );
         }
       });
     },
-    updateUser(context, {login, updatedUser}) {
+    updateUser(context, { login, updatedUser }) {
       return new Promise((resolve, reject) => {
         if (!login || !updatedUser.email || !updatedUser.password) {
           return reject('400');
@@ -59,18 +86,18 @@ export default new Vuex.Store({
               if (res.status !== 200) {
                 throw new Error(res.status + '');
               }
-              context.commit('changeUser', {login, newUser: updatedUser});
+              context.commit('changeUser', { login, newUser: updatedUser });
               resolve();
             })
             .catch(e => reject(e.message));
       });
     },
-    createUser(context, {login, newUser}) {
+    createUser(context, { login, newUser }) {
       return new Promise((resolve, reject) => {
         if (!login || !newUser.email || !newUser.password) {
           return reject('400');
         }
-        if (_.find(context.state.users, {login})) {
+        if (_.find(context.state.users, { login })) {
           return reject('404');
         }
         fetch('http://localhost:3000/api/user/', {
@@ -89,6 +116,6 @@ export default new Vuex.Store({
             })
             .catch(e => reject(e.message));
       });
-    }
+    },
   },
 });
