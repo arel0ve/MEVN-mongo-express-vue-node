@@ -7,7 +7,7 @@ function getAllUsers(req, res, next) {
       .sort('login')
       .skip(+req.query['from'])
       .limit(+req.query['to'] - +req.query['from'])
-      .select('login')
+      .select('login -_id')
       .then(users => {
         res.status(200).json(users);
       }).catch(e => {
@@ -21,7 +21,7 @@ function getAllUsers(req, res, next) {
 
 function getUserByLogin(req, res, next) {
   User.findOne({ login: req.params.login })
-      .select('login email firstName lastName country')
+      .select('login email firstName lastName country -_id')
       .populate('country', 'name')
       .then(user => {
         res.status(200).json({

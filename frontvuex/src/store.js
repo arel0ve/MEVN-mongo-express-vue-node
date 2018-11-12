@@ -63,8 +63,6 @@ export default new Vuex.Store({
           fetch('http://localhost:3000/api/user/' + login)
               .then(res => res.json())
               .then(user => {
-                console.log(user);
-                _.unset(user, '_id');
                 if (storeUser) {
                   context.commit('changeUser', { login, newUser: user });
                 } else {
@@ -134,7 +132,6 @@ export default new Vuex.Store({
             .then(res => res.json())
             .then(user => {
               context.commit('deleteUser', { login: user['login'] });
-              console.log(context.state.users);
               resolve(context.state.users);
             })
             .catch(e => reject(e.message));
