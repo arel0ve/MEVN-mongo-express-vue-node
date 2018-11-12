@@ -2,8 +2,15 @@
   <div class="container">
       <div class="row" v-for="user of users">
         <div class="col-6">{{ user.login }}</div>
-        <div class="col-3"><router-link :to="'user/' + user.login">view</router-link></div>
-        <div class="col-3"><router-link :to="'edit/' + user.login">edit</router-link></div>
+        <div class="col-2">
+          <router-link :to="'user/' + user.login">view</router-link>
+        </div>
+        <div class="col-2">
+          <router-link :to="'edit/' + user.login">edit</router-link>
+        </div>
+        <div class="col-2">
+          <button @click="deleteUser(user.login)">X</button>
+        </div>
       </div>
     <div class="row justify-content-end border-top" style="padding: 12px;">
       <div class="col-6" v-if="existsMoreUsers">
@@ -49,8 +56,23 @@ export default {
             }
             this.users = users;
           });
+    },
+    deleteUser(login) {
+      this.$store.dispatch('deleteUser', { login })
+          .then(users => {
+            this.users = users;
+            if (this.users.length === 0) {
+              this.errMessage = "There are not any users in user's list. Please, try again later"
+            }
+          })
+          .catch(() => {
+            this.errMessage = "Something bad on server. Please, try again later";
+            setTimeout(() => {
+              this.errMessage = "";
+            }, 3000)
+          });
     }
-  }
+  },
 };
 </script>
 

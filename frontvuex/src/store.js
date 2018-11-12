@@ -17,7 +17,10 @@ export default new Vuex.Store({
     changeUser(state, { login, newUser }) {
       _.pullAllBy(state.users, [{login}], 'login');
       state.users.push(_.assign({login}, newUser));
-    }
+    },
+    deleteUser(state, { login }) {
+      _.pullAllBy(state.users, [{login}], 'login');
+    },
   },
   actions: {
     getUsers(context) {
@@ -113,6 +116,23 @@ export default new Vuex.Store({
               }
               context.commit('addUser', newUser);
               resolve();
+            })
+            .catch(e => reject(e.message));
+      });
+    },
+    deleteUser(context, { login }) {
+      return new Promise((resolve, reject) => {
+        fetch(`http://localhost:3000/api/user/${login}`, {
+            method: 'delete',
+            headers: new Headers({
+              'Content-Type': 'application/x-www-form-urlencoded'
+            })
+        })
+            .then(res => res.json())
+            .then(user => {
+              context.commit('deleteUser', { login: user['login'] });
+              console.log(context.state.users);
+              resolve(context.state.users);
             })
             .catch(e => reject(e.message));
       });

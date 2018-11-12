@@ -23,12 +23,12 @@ function getUserByLogin(req, res, next) {
       .select('login email firstName lastName country')
       .then(user => {
     res.status(200).json(user);
-  }).catch((e => {
+  }).catch(e => {
     console.log(e);
     res.status(404).json({
       message: 'Not Found'
     });
-  }));
+  });
 }
 
 
@@ -91,7 +91,18 @@ function postUserByLogin(req, res, next) {
     res.status(200).json({
       message: 'Ok'
     });
-  }).catch((e) => {
+  }).catch(e => {
+    console.log(e);
+    res.status(500).json({
+      message: 'Server error'
+    });
+  });
+}
+
+function deleteUserByLogin(req, res, next) {
+  User.findOneAndDelete({login: req.params.login}).then(user => {
+    res.status(200).json(user);
+  }).catch(e => {
     console.log(e);
     res.status(500).json({
       message: 'Server error'
@@ -104,5 +115,6 @@ module.exports = {
   getAllUsers,
   getUserByLogin,
   putUserByLogin,
-  postUserByLogin
+  postUserByLogin,
+  deleteUserByLogin
 };

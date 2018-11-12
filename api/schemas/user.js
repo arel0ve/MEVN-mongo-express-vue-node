@@ -29,8 +29,8 @@ const userSchema = new mongoose.Schema({
     type: String
   },
   country: {
-    type: String,
-    default: 'UA'
+    type: Schema.Types.ObjectId,
+    ref: 'Country'
   }
 });
 
