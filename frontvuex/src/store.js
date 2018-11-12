@@ -25,9 +25,6 @@ export default new Vuex.Store({
   actions: {
     getUsers(context) {
       return new Promise(resolve => {
-        if (context.state.from === 0) {
-          context.state.users = [];
-        }
         if (context.state.users.length) {
           resolve(context.state.users);
         } else {
@@ -40,7 +37,11 @@ export default new Vuex.Store({
         fetch(`http://localhost:3000/api/users?from=${context.state.from}&to=${context.state.to}`)
             .then(res => res.json())
             .then(users => {
-              context.state.users = _.concat(context.state.users, users);
+              for (const user of users) {
+                if (!_.find(context.state.users, {'login': user.login})) {
+                  context.commit('addUser', user);
+                }
+              }
               context.state.from += users.length > 0 ? 5 : 0;
               resolve(context.state.users);
             })
