@@ -25,6 +25,9 @@ export default new Vuex.Store({
   actions: {
     getUsers(context) {
       return new Promise(resolve => {
+        if (context.state.from === 0) {
+          context.state.users = [];
+        }
         if (context.state.users.length) {
           resolve(context.state.users);
         } else {
@@ -54,13 +57,13 @@ export default new Vuex.Store({
     getUser(context, { login }) {
       return new Promise(resolve => {
         let storeUser = _.find(context.state.users, { login });
-        console.log(storeUser);
         if (storeUser && storeUser['email']) {
           resolve(storeUser)
         } else {
           fetch('http://localhost:3000/api/user/' + login)
               .then(res => res.json())
               .then(user => {
+                console.log(user);
                 _.unset(user, '_id');
                 if (storeUser) {
                   context.commit('changeUser', { login, newUser: user });

@@ -1,4 +1,5 @@
 const User = require('../schemas/user');
+const Country = require('../schemas/country');
 
 
 function getAllUsers(req, res, next) {
@@ -21,8 +22,15 @@ function getAllUsers(req, res, next) {
 function getUserByLogin(req, res, next) {
   User.findOne({ login: req.params.login })
       .select('login email firstName lastName country')
+      .populate('country', 'name')
       .then(user => {
-    res.status(200).json(user);
+        res.status(200).json({
+      login: user.login,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      country: user.country.name
+    });
   }).catch(e => {
     console.log(e);
     res.status(404).json({
@@ -31,23 +39,83 @@ function getUserByLogin(req, res, next) {
   });
 }
 
+function postUserByLogin(req, res, next) {
+  let data = JSON.parse(Object.keys(req.body)[0]);
+
+  __saveAndGetCountry(req, res, {data}, __postUserWithCountryId);
+}
 
 function putUserByLogin(req, res, next) {
   let data = JSON.parse(Object.keys(req.body)[0]);
-  User.findOne({login: req.params.login}).then(user => {
+
+  __saveAndGetCountry(req, res, {data}, __putUserWithCountryId);
+}
+
+function __saveAndGetCountry(req, res, {data}, callback) {
+  country = new Country({
+    name: data.country
+  });
+
+  country.save().then(country => {
+    callback(req, res, {
+      login: data.login || req.params.login,
+      password: data.password,
+      email: data.email,
+      firstName: data.firstName,
+      lastName: data.lastName,
+      countryId: country._id
+    });
+  }).catch(() => {
+    Country.findOne({name: data.country}).then(country => {
+      callback(req, res, {
+        login: data.login || req.params.login,
+        password: data.password,
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        countryId: country._id
+      });
+    })
+  });
+}
+
+function __postUserWithCountryId(req, res, {login, password, email, firstName, lastName, countryId}) {
+  user = new User({
+    login,
+    password,
+    email,
+    firstName,
+    lastName,
+    country: countryId
+  });
+
+  user.save().then(() => {
+    res.status(200).json({
+      message: 'Ok'
+    });
+  }).catch(e => {
+    console.log(e);
+    res.status(500).json({
+      message: 'Server error'
+    });
+  });
+}
+
+function __putUserWithCountryId(req, res, {login, password, email, firstName, lastName, countryId}) {
+  User.findOne({login: login}).then(user => {
 
     if (!user) {
       throw new Error('404');
     }
 
-    if (!user.checkPassword(data.password)) {
+    if (!user.checkPassword(password)) {
       throw new Error('403');
     }
 
-    user.email = data.email;
-    user.firstName = data.firstName;
-    user.lastName = data.lastName;
-    user.country = data.country;
+    user.email = email;
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.country = countryId;
     return user.save();
 
   }).then(() => {
@@ -55,6 +123,7 @@ function putUserByLogin(req, res, next) {
       message: 'Ok'
     });
   }).catch(e => {
+    console.log(e);
     switch(e.message) {
       case '403':
         res.status(403).json({
@@ -72,30 +141,6 @@ function putUserByLogin(req, res, next) {
         });
         break;
     }
-  });
-}
-
-
-function postUserByLogin(req, res, next) {
-  let data = JSON.parse(Object.keys(req.body)[0]);
-  user = new User({
-    login: data.login,
-    password: data.password,
-    email: data.email,
-    firstName: data.firstName,
-    lastName: data.lastName,
-    country: data.country
-  });
-
-  user.save().then(() => {
-    res.status(200).json({
-      message: 'Ok'
-    });
-  }).catch(e => {
-    console.log(e);
-    res.status(500).json({
-      message: 'Server error'
-    });
   });
 }
 

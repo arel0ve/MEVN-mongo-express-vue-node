@@ -9,10 +9,10 @@
           <router-link :to="'edit/' + user.login">edit</router-link>
         </div>
         <div class="col-2">
-          <button @click="deleteUser(user.login)">X</button>
+          <span class="delete" @click="deleteUser(user.login)">X</span>
         </div>
       </div>
-    <div class="row justify-content-end border-top" style="padding: 12px;">
+    <div class="row justify-content-end border-top border-info" style="padding: 12px 0;">
       <div class="col-6" v-if="existsMoreUsers">
         <button class="btn btn-primary" @click="getMoreUsers">Show more users</button>
       </div>
@@ -90,5 +90,16 @@ li {
 }
 a {
   color: #42b983;
+  &:hover {
+    color: #4283b9;
+  }
+}
+.delete {
+  cursor: pointer;
+  color: #b94283;
+  &:hover {
+    color: #4283b9;
+    text-decoration: underline;
+  }
 }
 </style>

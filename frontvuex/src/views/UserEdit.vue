@@ -48,13 +48,15 @@
            v-if="response.message.length > 0">
         <div class="col">{{ response.message }}</div>
       </div>
-      <div class="row">
-        <div class="col-8">
+      <div class="row border-top border-info" style="padding: 12px 0;">
+        <div class="col-6">
           <button class="btn btn-primary" v-if="$route.path.includes('edit')" @click.prevent="updateUser">Edit</button>
           <button class="btn btn-primary" v-else @click.prevent="createUser">Create</button>
         </div>
-        <div class="col-4">
-          <router-link to="../index">Back</router-link>
+        <div class="col-6">
+          <button class="btn btn-secondary" @click.prevent="goBack">
+            <span>Back</span>
+          </button>
         </div>
       </div>
     </form>
@@ -145,7 +147,10 @@ export default {
                 break;
             }
           });
-    }
+    },
+    goBack() {
+      this.$router.push('../index');
+    },
   }
 }
 </script>

@@ -43,7 +43,10 @@ export default {
   },
   created() {
     this.$store.dispatch('getUser', {login: this.$route.params.login})
-        .then(user => this.user = user);
+        .then(user => {
+          this.user = user;
+          this.user['country'] = this.user['country'].toUpperCase();
+        });
   }
 };
 </script>
