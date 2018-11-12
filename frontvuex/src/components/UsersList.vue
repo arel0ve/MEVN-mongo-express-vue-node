@@ -27,8 +27,8 @@ export default {
   },
   created() {
     fetch('http://localhost:3000/api/users')
-        .then((res) => res.json())
-        .then((users) => this.users = users)
+        .then(res => res.json())
+        .then(users => this.users = users)
         .catch(() => this.errMessage = "Can't load list of users. Please, try again later");
   }
 };
