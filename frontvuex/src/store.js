@@ -23,81 +23,81 @@ export default new Vuex.Store({
     },
   },
   actions: {
-    getUsers(context) {
-      return new Promise(resolve => {
-        if (context.state.users.length) {
-          resolve(context.state.users);
-        } else {
-          context.dispatch('getMoreUsers').then(users => resolve(users));
+    async getUsers(context) {
+      if (context.state.users.length) {
+        return context.state.users;
+      } else {
+        return await context.dispatch('getMoreUsers');
+      }
+    },
+    async getMoreUsers(context) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/users?from=${context.state.from}&to=${context.state.to}`);
+        const users = await res.json();
+        for (const user of users) {
+          if (!_.find(context.state.users, {'login': user.login})) {
+            context.commit('addUser', user);
+          }
         }
-      })
+        context.state.from += users.length > 0 ? 5 : 0;
+        return context.state.users;
+      } catch (e) {
+        console.error(e);
+        return context.state.users ? context.state.users : [];
+      }
     },
-    getMoreUsers(context) {
-      return new Promise(resolve => {
-        fetch(`http://localhost:3000/api/users?from=${context.state.from}&to=${context.state.to}`)
-            .then(res => res.json())
-            .then(users => {
-              for (const user of users) {
-                if (!_.find(context.state.users, {'login': user.login})) {
-                  context.commit('addUser', user);
-                }
-              }
-              context.state.from += users.length > 0 ? 5 : 0;
-              resolve(context.state.users);
-            })
-            .catch(() => {
-              if (!context.state.users) {
-                resolve([]);
-              } else {
-                resolve(context.state.users);
-              }
-            });
-      })
-
-    },
-    getUser(context, { login }) {
-      return new Promise(resolve => {
+    async getUser(context, { login }) {
+      try {
         let storeUser = _.find(context.state.users, { login });
         if (storeUser && storeUser['email']) {
-          resolve(storeUser)
+          return storeUser;
         } else {
-          fetch('http://localhost:3000/api/user/' + login)
-              .then(res => res.json())
-              .then(user => {
-                if (storeUser) {
-                  context.commit('changeUser', { login, newUser: user });
-                } else {
-                  context.commit('addUser', user);
-                }
-                resolve(user);
-              })
-              .catch(() => resolve({ }) );
+          const res = await fetch('http://localhost:3000/api/user/' + login);
+          const user = await res.json();
+          if (storeUser) {
+            context.commit('changeUser', { login, newUser: user });
+          } else {
+            context.commit('addUser', user);
+          }
+          return user;
         }
-      });
+      } catch (e) {
+        console.error(e);
+        return {
+          login: 'Not Found'
+        };
+      }
     },
-    updateUser(context, { login, updatedUser }) {
-      return new Promise((resolve, reject) => {
+    async updateUser(context, { login, updatedUser }) {
+      try {
         if (!login || !updatedUser.email || !updatedUser.password) {
-          return reject('400');
+          throw new Error('400');
         }
-        fetch('http://localhost:3000/api/user/' + login, {
+        const res = await fetch('http://localhost:3000/api/user/' + login, {
           method: 'put',
           headers: new Headers({
             'Content-Type': 'application/x-www-form-urlencoded'
           }),
           body: JSON.stringify(updatedUser)
-        })
-            .then((res) => {
-              if (res.status !== 200) {
-                throw new Error(res.status + '');
-              }
-              context.commit('changeUser', { login, newUser: updatedUser });
-              resolve();
-            })
-            .catch(e => reject(e.message));
-      });
+        });
+
+        if (res.status !== 200) {
+          throw new Error(res.status + '');
+        }
+        context.commit('changeUser', { login, newUser: updatedUser });
+        return 'Ok!';
+      } catch (e) {
+        console.error(e);
+        throw new Error(e);
+      }
     },
-    createUser(context, { login, newUser }) {
+    async createUser(context, { login, newUser }) {
+      if (!login || !newUser.email || !newUser.password) {
+        throw new Error('400');
+      }
+      if (_.find(context.state.users, { login })) {
+        return reject('404');
+      }
       return new Promise((resolve, reject) => {
         if (!login || !newUser.email || !newUser.password) {
           return reject('400');
