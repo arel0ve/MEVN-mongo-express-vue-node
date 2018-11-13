@@ -45,7 +45,7 @@ async function getUsersByCountry(req, res, next) {
 async function getUserByLogin(req, res, next) {
   try {
     const user = await User.findOne({ login: req.params.login })
-        .select('login email firstName lastName country -_id')
+        .select('login email firstName lastName country birthday -_id')
         .populate('country', 'name -_id')
         .populate('friends', 'login -_id');
     let friends = [];
@@ -58,6 +58,7 @@ async function getUserByLogin(req, res, next) {
       firstName: user.firstName,
       lastName: user.lastName,
       country: user.country.name,
+      birthday: user.birthday,
       friends: friends
     });
   } catch (e) {
@@ -86,6 +87,7 @@ async function postUserByLogin(req, res, next) {
       email: data.email,
       firstName: data.firstName,
       lastName: data.lastName,
+      birthday: new Date(data.birthday),
       country: country._id
     });
 
@@ -133,16 +135,19 @@ async function putUserByLogin(req, res, next) {
       }
     }
 
-    const friends = await User.find({}).or(friendsQuery).select('_id');
-
     let friendsIds = [];
-    for (const friend of friends) {
-      friendsIds.push(friend._id);
+
+    if (friendsQuery.length > 0) {
+      const friends = await User.find({}).or(friendsQuery).select('_id');
+      for (const friend of friends) {
+        friendsIds.push(friend._id);
+      }
     }
 
     user.email = data.email;
     user.firstName = data.firstName;
     user.lastName = data.lastName;
+    user.birthday = data.birthday;
     user.country = country._id;
     user.friends = friendsIds;
     await user.save();

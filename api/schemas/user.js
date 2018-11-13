@@ -28,6 +28,9 @@ const userSchema = new mongoose.Schema({
   lastName: {
     type: String
   },
+  birthday: {
+    type: Date
+  },
   country: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Country'

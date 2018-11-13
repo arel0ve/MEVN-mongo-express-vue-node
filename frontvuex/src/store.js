@@ -103,7 +103,6 @@ export default new Vuex.Store({
           }),
           body: JSON.stringify(updatedUser),
         });
-        console.log(res.status);
         if (res.status !== 200) {
           throw new Error(res.status.toString());
         }

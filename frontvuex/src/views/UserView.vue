@@ -51,6 +51,9 @@ export default {
   async created() {
     this.user = await this.$store.dispatch('getUser', { login: this.$route.params['login'] });
     this.user.country = this.user.country.toUpperCase();
+    if (this.user.birthday) {
+      this.user.birthday = new Date(this.user.birthday).toDateString();
+    }
   },
 };
 </script>

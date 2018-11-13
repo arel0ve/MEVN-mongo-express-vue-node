@@ -50,6 +50,11 @@
         <input type="text" class="form-control" id="inputCountry" name="country"
                :placeholder="placeholders.country" v-model="user.country">
       </div>
+      <div class="form-group">
+        <label for="inputBirthday">Birthday</label>
+        <input type="date" class="form-control" id="inputBirthday" name="birthday"
+               v-model="user.birthday">
+      </div>
       <div class="row border-bottom">
         <div class="col-12 col-md-6" style="margin-bottom: 6px;"
              v-if="$route.path.includes('edit')">
@@ -126,6 +131,13 @@ export default {
           }
         }
       }
+      this.user = user;
+      let day = new Date(this.user.birthday).getDate();
+      day = day < 10 ? '0' + day : '' + day;
+      let month = new Date(this.user.birthday).getMonth() + 1;
+      month = month < 10 ? '0' + month : '' + month;
+      let year = new Date(this.user.birthday).getFullYear();
+      this.user.birthday = `${year}-${month}-${day}`;
     }
   },
   methods: {
