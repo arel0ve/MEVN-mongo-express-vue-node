@@ -41,12 +41,9 @@ export default {
       user: {}
     }
   },
-  created() {
-    this.$store.dispatch('getUser', {login: this.$route.params.login})
-        .then(user => {
-          this.user = user;
-          this.user['country'] = this.user['country'].toUpperCase();
-        });
+  async created() {
+    this.user = await this.$store.dispatch('getUser', {login: this.$route.params['login']});
+    this.user['country'] = this.user['country'].toUpperCase();
   }
 };
 </script>

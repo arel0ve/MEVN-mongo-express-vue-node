@@ -8,15 +8,15 @@ export default new Vuex.Store({
   state: {
     users: [],
     from: 0,
-    to: 5
+    count: 5
   },
   mutations: {
     addUser(state, newUser) {
       state.users.push(newUser)
     },
     changeUser(state, { login, newUser }) {
-      _.pullAllBy(state.users, [{login}], 'login');
-      state.users.push(_.assign({login}, newUser));
+      const i = _.findIndex(state.users, {'login': login});
+      state.users[i] = _.assign({login}, newUser);
     },
     deleteUser(state, { login }) {
       _.pullAllBy(state.users, [{login}], 'login');
@@ -27,19 +27,30 @@ export default new Vuex.Store({
       if (context.state.users.length) {
         return context.state.users;
       } else {
-        return await context.dispatch('getMoreUsers');
+        return await context.dispatch('getMoreUsers', {});
       }
     },
-    async getMoreUsers(context) {
+    async reload(context) {
+      context.state.users = [];
+      return await context.dispatch('getMoreUsers', {
+        from: 0,
+        to: context.state.from,
+        isReload: true
+      });
+    },
+    async getMoreUsers(context, {from, to, isReload}) {
       try {
-        const res = await fetch(`http://localhost:3000/api/users?from=${context.state.from}&to=${context.state.to}`);
+        from = (from !== undefined) ? from : context.state.from;
+        to = to ? to : (context.state.count + from);
+        isReload = !!isReload;
+        const res = await fetch(`http://localhost:3000/api/users?from=${from}&to=${to}`);
         const users = await res.json();
         for (const user of users) {
           if (!_.find(context.state.users, {'login': user.login})) {
             context.commit('addUser', user);
           }
         }
-        context.state.from += users.length > 0 ? 5 : 0;
+        context.state.from += (users.length > 0 && !isReload) ? 5 : 0;
         return context.state.users;
       } catch (e) {
         console.error(e);
@@ -80,63 +91,56 @@ export default new Vuex.Store({
           }),
           body: JSON.stringify(updatedUser)
         });
-
+        console.log(res.status);
         if (res.status !== 200) {
           throw new Error(res.status + '');
         }
         context.commit('changeUser', { login, newUser: updatedUser });
-        return 'Ok!';
+        return '200';
       } catch (e) {
         console.error(e);
-        throw new Error(e);
+        return e + '';
       }
     },
     async createUser(context, { login, newUser }) {
-      if (!login || !newUser.email || !newUser.password) {
-        throw new Error('400');
-      }
-      if (_.find(context.state.users, { login })) {
-        return reject('404');
-      }
-      return new Promise((resolve, reject) => {
+      try {
         if (!login || !newUser.email || !newUser.password) {
-          return reject('400');
+          throw new Error('400');
         }
         if (_.find(context.state.users, { login })) {
-          return reject('404');
+          throw new Error('404');
         }
-        fetch('http://localhost:3000/api/user/', {
+        const res = await fetch('http://localhost:3000/api/user/', {
           method: 'post',
           headers: new Headers({
             'Content-Type': 'application/x-www-form-urlencoded'
           }),
           body: JSON.stringify(newUser)
-        })
-            .then((res) => {
-              if (res.status !== 200) {
-                throw new Error(res.status + '');
-              }
-              context.commit('addUser', newUser);
-              resolve();
-            })
-            .catch(e => reject(e.message));
-      });
+        });
+        if (res.status !== 200) {
+          throw new Error(res.status + '');
+        }
+        context.commit('addUser', newUser);
+        return('200');
+      } catch (e) {
+        console.error(e);
+        return e + '';
+      }
     },
-    deleteUser(context, { login }) {
-      return new Promise((resolve, reject) => {
-        fetch(`http://localhost:3000/api/user/${login}`, {
-            method: 'delete',
-            headers: new Headers({
-              'Content-Type': 'application/x-www-form-urlencoded'
-            })
-        })
-            .then(res => res.json())
-            .then(user => {
-              context.commit('deleteUser', { login: user['login'] });
-              resolve(context.state.users);
-            })
-            .catch(e => reject(e.message));
-      });
+    async deleteUser(context, { login }) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/user/${login}`, {
+          method: 'delete',
+          headers: new Headers({
+            'Content-Type': 'application/x-www-form-urlencoded'
+          })
+        });
+        const user = await res.json();
+        context.commit('deleteUser', { login: user['login'] });
+        return context.state.users;
+      } catch (e) {
+        return e + ''
+      }
     },
   },
 });

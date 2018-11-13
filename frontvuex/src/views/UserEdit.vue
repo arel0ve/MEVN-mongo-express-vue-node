@@ -100,53 +100,50 @@ export default {
       replace('lastName', user);
       replace('country', user);
     },
-    updateUser() {
-      this.$store.dispatch('updateUser', {login: this.$route.params.login, updatedUser: this.user})
-          .then(() => {
-            this.response.isGood = true;
-            this.response.message = 'Updating successful';
-          })
-          .catch((errCode) => {
-            this.response.isGood = false;
-            switch(errCode) {
-              case '400':
-                this.response.message = 'Empty data fields. ' +
-                    'Please, input it and try again';
-                break;
-              case '404':
-                this.response.message = 'User not found';
-                break;
-              case '403':
-                this.response.message = 'Password is wrong';
-                break;
-              default:
-                this.response.message = 'Something was bad in updating! Please try again later';
-                break;
-            }
-          });
+    async updateUser() {
+      const res = await this.$store.dispatch('updateUser', {login: this.$route.params.login, updatedUser: this.user});
+      this.response.isGood = false;
+      console.log(res);
+      switch(res) {
+        case '200':
+          this.response.isGood = true;
+          this.response.message = 'Updating successful';
+          break;
+        case '400':
+          this.response.message = 'Empty data fields. ' +
+              'Please, input it and try again';
+          break;
+        case '404':
+          this.response.message = 'User not found';
+          break;
+        case '403':
+          this.response.message = 'Password is wrong';
+          break;
+        default:
+          this.response.message = 'Something was bad in updating! Please try again later';
+          break;
+      }
     },
-    createUser() {
-      this.$store.dispatch('createUser', {login: this.user.login, newUser: this.user})
-          .then(() => {
-            this.response.isGood = true;
-            this.response.message = 'Creating successful';
-          })
-          .catch(errCode => {
-            this.response.isGood = false;
-            switch(errCode) {
-              case '400':
-                this.response.message = 'Empty data fields. ' +
-                    'Please, input it and try again';
-                break;
-              case '404':
-                this.response.message = 'This login is existing. ' +
-                    'Please, change login and try again';
-                break;
-              default:
-                this.response.message = 'Something was bad in creating! Please try again later';
-                break;
-            }
-          });
+    async createUser() {
+      const res = await this.$store.dispatch('createUser', {login: this.user.login, newUser: this.user});
+      this.response.isGood = false;
+      switch(res) {
+        case '200':
+          this.response.isGood = true;
+          this.response.message = 'Creating successful';
+          break;
+        case '400':
+          this.response.message = 'Empty data fields. ' +
+              'Please, input it and try again';
+          break;
+        case '404':
+          this.response.message = 'This login is existing. ' +
+              'Please, change login and try again';
+          break;
+        default:
+          this.response.message = 'Something was bad in creating! Please try again later';
+          break;
+      }
     },
     goBack() {
       this.$router.push('../index');

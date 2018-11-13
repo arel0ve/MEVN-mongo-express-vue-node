@@ -12,13 +12,16 @@
           <span class="delete" @click="deleteUser(user.login)">X</span>
         </div>
       </div>
-    <div class="row justify-content-end border-top border-info" style="padding: 12px 0;">
-      <div class="col-6" v-if="existsMoreUsers">
-        <button class="btn btn-primary" @click="getMoreUsers">Show more users</button>
+    <div class="row justify-content-center border-top border-info">
+      <div class="col-6 col-md-4" v-if="existsMoreUsers" style="padding: 12px 0;">
+        <button class="btn btn-primary col-10" @click="getMoreUsers">Show more users</button>
       </div>
-      <div class="col-6">
+      <div class="col-6 col-md-4" style="padding: 12px 0;">
+        <button class="btn btn-primary col-10" @click="reload">Reload</button>
+      </div>
+      <div class="col-6 col-md-4" style="padding: 12px 0;">
         <router-link to="../create">
-          <button class="btn btn-primary">Create new user</button>
+          <button class="btn btn-primary col-10">Create new user</button>
         </router-link>
       </div>
     </div>
@@ -38,39 +41,37 @@ export default {
       errMessage: ''
     }
   },
-  created() {
-    this.$store.dispatch('getUsers')
-        .then(users => {
-          this.users = users;
-          if (this.users.length === 0) {
-            this.errMessage = "There are not any users in user's list. Please, try again later"
-          }
-        });
+  async created() {
+    this.users = await this.$store.dispatch('getUsers');
+    if (this.users.length === 0) {
+      this.errMessage = "There are not any users in user's list. Please, try again later"
+    }
   },
   methods: {
-    getMoreUsers() {
-      this.$store.dispatch('getMoreUsers')
-          .then(users => {
-            if (users.length === this.users.length) {
-              this.existsMoreUsers = false;
-            }
-            this.users = users;
-          });
+    async getMoreUsers() {
+      const oldLength = this.users.length;
+      this.users = await this.$store.dispatch('getMoreUsers', {});
+      if (this.users.length === oldLength) {
+        this.existsMoreUsers = false;
+      }
     },
-    deleteUser(login) {
-      this.$store.dispatch('deleteUser', { login })
-          .then(users => {
-            this.users = users;
-            if (this.users.length === 0) {
-              this.errMessage = "There are not any users in user's list. Please, try again later"
-            }
-          })
-          .catch(() => {
-            this.errMessage = "Something bad on server. Please, try again later";
-            setTimeout(() => {
-              this.errMessage = "";
-            }, 3000)
-          });
+    async reload() {
+      this.users = await this.$store.dispatch('reload', {});
+      if (this.users.length === 0) {
+        this.errMessage = "There are not any users in user's list. Please, try again later"
+      }
+    },
+    async deleteUser(login) {
+      const res = await this.$store.dispatch('deleteUser', { login });
+      if (typeof res === 'object' && res !== null) {
+        this.users = res;
+        if (this.users.length === 0) {
+          this.errMessage = "There are not any users in user's list. Please, try again later"
+        }
+      } else {
+        this.errMessage = "Something bad on server. Please, try again later";
+      }
+      await this.reload();
     }
   },
 };
