@@ -15,10 +15,17 @@
           <router-link :to="$route.params.login">{{ user.login }}</router-link>
         </td>
       </tr>
-      <tr v-for="(val, key, index) in user">
+      <tr v-for="(val, key, index) in user" v-if="key !== 'friends'">
         <th scope="col">{{ index }}</th>
         <td>{{ key }}:</td>
         <td>{{ val }}</td>
+      </tr>
+      <tr>
+        <th scope="col">{{ Object.keys(user).length - 1 }}</th>
+        <td>friends:</td>
+        <td>
+          <div v-for="val of user.friends">{{ val }}</div>
+        </td>
       </tr>
       <tr>
         <th scope="col">#</th>

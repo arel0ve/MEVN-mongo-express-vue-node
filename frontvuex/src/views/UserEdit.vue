@@ -44,6 +44,20 @@
         <input type="text" class="form-control" id="inputCountry" name="country"
                :placeholder="placeholders.country" v-model="user.country">
       </div>
+      <div class="row border-bottom">
+        <div class="col-12 col-md-6" style="margin-bottom: 6px;" v-if="$route.path.includes('edit')">
+          <strong>Select friends from your country</strong>
+        </div>
+      </div>
+      <div class="form-group row" v-if="$route.path.includes('edit')">
+        <template v-for="(val, key) of user.friends">
+          <div class="col-6 col-md-4">
+            <input type="checkbox" :id="key" name="friend"
+                   v-model="user.friends[key]" :checked="val">
+            <label :for="key" style="padding: 0 6px;">{{ key }}</label>
+          </div>
+        </template>
+      </div>
       <div class="row alert" :class="{ 'alert-success': response.isGood, 'alert-danger': !response.isGood }"
            v-if="response.message.length > 0">
         <div class="col">{{ response.message }}</div>
@@ -81,11 +95,29 @@ export default {
       }
     }
   },
-  created() {
+  async created() {
+    let friends = [];
+    let user = {};
     if (this.$route.path.includes('edit')) {
-      this.$store.dispatch('getUser', {login: this.$route.params.login})
-          .then(user => this._replacePlaceholders(user));
+      user = await this.$store.dispatch('getUser', {login: this.$route.params['login']});
+      friends = await this.$store.dispatch('getUsersByCountry', {country: user['country']});
+      this._replacePlaceholders(user);
+      this.user.friends = {};
+      for (const mayFriend of friends) {
+        if (mayFriend.login !== this.$route.params['login']) {
+          this.user['friends'][mayFriend.login] = false;
+        }
+      }
+      for (const realFriend of user.friends) {
+        for (const mayFriend of friends) {
+          if (realFriend === mayFriend.login) {
+            this.user['friends'][realFriend] = true;
+            break;
+          }
+        }
+      }
     }
+
   },
   methods: {
     _replacePlaceholders(user = this.user) {
@@ -101,9 +133,9 @@ export default {
       replace('country', user);
     },
     async updateUser() {
+      console.log(this.user);
       const res = await this.$store.dispatch('updateUser', {login: this.$route.params.login, updatedUser: this.user});
       this.response.isGood = false;
-      console.log(res);
       switch(res) {
         case '200':
           this.response.isGood = true;

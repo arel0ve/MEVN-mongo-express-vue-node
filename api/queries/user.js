@@ -18,17 +18,47 @@ async function getAllUsers(req, res, next) {
   }
 }
 
+async function getUsersByCountry(req, res, next) {
+  try {
+    if (!req.query.country) {
+      throw new Error('404');
+    }
+
+    const country = await Country.findOne({name: req.query.country});
+
+    if (!country) {
+      throw new Error('404');
+    }
+
+    const users = await User.find({country: country._id})
+        .sort('login')
+        .select('login -_id');
+    res.status(200).json(users);
+  } catch (e) {
+    console.log(e);
+    res.status(404).json({
+      message: 'Not Found'
+    });
+  }
+}
+
 async function getUserByLogin(req, res, next) {
   try {
     const user = await User.findOne({ login: req.params.login })
         .select('login email firstName lastName country -_id')
-        .populate('country', 'name');
+        .populate('country', 'name -_id')
+        .populate('friends', 'login -_id');
+    let friends = [];
+    for (const friend of user.friends) {
+      friends.push(friend.login);
+    }
     res.status(200).json({
       login: user.login,
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      country: user.country.name
+      country: user.country.name,
+      friends: friends
     });
   } catch (e) {
     console.log(e);
@@ -94,10 +124,27 @@ async function putUserByLogin(req, res, next) {
       throw new Error('403');
     }
 
+    let friendsQuery = [];
+    for (const friend in data.friends) {
+      if (data.friends[friend]) {
+        friendsQuery.push({
+          login: friend
+        });
+      }
+    }
+
+    const friends = await User.find({}).or(friendsQuery).select('_id');
+
+    let friendsIds = [];
+    for (const friend of friends) {
+      friendsIds.push(friend._id);
+    }
+
     user.email = data.email;
     user.firstName = data.firstName;
     user.lastName = data.lastName;
     user.country = country._id;
+    user.friends = friendsIds;
     await user.save();
 
     res.status(200).json({
@@ -140,6 +187,7 @@ async function deleteUserByLogin(req, res, next) {
 
 module.exports = {
   getAllUsers,
+  getUsersByCountry,
   getUserByLogin,
   putUserByLogin,
   postUserByLogin,

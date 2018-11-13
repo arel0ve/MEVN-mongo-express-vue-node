@@ -30,6 +30,20 @@ export default new Vuex.Store({
         return await context.dispatch('getMoreUsers', {});
       }
     },
+    async getUsersByCountry(context, {country}) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/users/by-country?country=${country}`);
+        // for (const user of users) {
+        //   if (!_.find(context.state.users, {'login': user.login})) {
+        //     context.commit('addUser', user);
+        //   }
+        // }
+        return await res.json();
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
+    },
     async reload(context) {
       context.state.users = [];
       return await context.dispatch('getMoreUsers', {

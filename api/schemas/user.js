@@ -31,7 +31,11 @@ const userSchema = new mongoose.Schema({
   country: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Country'
-  }
+  },
+  friends: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 });
 
 userSchema.method('encryptPassword', function(password) {

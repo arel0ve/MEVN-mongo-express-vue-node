@@ -4,6 +4,7 @@ const router = express.Router();
 const db = require('../queries/user');
 
 router.get('/users', db.getAllUsers);
+router.get('/users/by-country', db.getUsersByCountry);
 router.get('/user/:login', db.getUserByLogin);
 router.put('/user/:login', db.putUserByLogin);
 router.post('/user', db.postUserByLogin);
