@@ -38,13 +38,13 @@ export default {
     return {
       users: [],
       existsMoreUsers: true,
-      errMessage: ''
+      errMessage: '',
     }
   },
   async created() {
     this.users = await this.$store.dispatch('getUsers');
     if (this.users.length === 0) {
-      this.errMessage = "There are not any users in user's list. Please, try again later"
+      this.errMessage = 'There are not any users in user\'s list. Please, try again later';
     }
   },
   methods: {
@@ -58,7 +58,7 @@ export default {
     async reload() {
       this.users = await this.$store.dispatch('reload', {});
       if (this.users.length === 0) {
-        this.errMessage = "There are not any users in user's list. Please, try again later"
+        this.errMessage = 'There are not any users in user\'s list. Please, try again later';
       }
     },
     async deleteUser(login) {
@@ -66,13 +66,13 @@ export default {
       if (typeof res === 'object' && res !== null) {
         this.users = res;
         if (this.users.length === 0) {
-          this.errMessage = "There are not any users in user's list. Please, try again later"
+          this.errMessage = 'There are not any users in user\'s list. Please, try again later';
         }
       } else {
-        this.errMessage = "Something bad on server. Please, try again later";
+        this.errMessage = 'Something bad on server. Please, try again later';
       }
       await this.reload();
-    }
+    },
   },
 };
 </script>

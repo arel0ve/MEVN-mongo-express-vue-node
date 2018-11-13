@@ -19,15 +19,21 @@
       </div>
       <div class="form-group">
         <label for="inputEmail">Email address</label>
-        <input type="email" class="form-control" id="inputEmail" aria-describedby="emailHelp" name="email"
+        <input type="email" class="form-control" id="inputEmail"
+               aria-describedby="emailHelp" name="email"
                :placeholder="placeholders.email" required v-model="user.email">
-        <small id="emailHelp" class="form-text text-muted">Please input your email above.</small>
+        <small id="emailHelp" class="form-text text-muted">
+          Please input your email above.
+        </small>
       </div>
       <div class="form-group">
         <label for="inputPassword">Your current password</label>
-        <input type="password" class="form-control" id="inputPassword" aria-describedby="passwordHelp" name="password"
+        <input type="password" class="form-control" id="inputPassword"
+               aria-describedby="passwordHelp" name="password"
                placeholder="Enter password" required v-model="user.password">
-        <small id="passwordHelp" class="form-text text-muted">Please input current password of your account.</small>
+        <small id="passwordHelp" class="form-text text-muted">
+          Please input current password of your account.
+        </small>
       </div>
       <div class="form-group">
         <label for="inputFirstName">First Name</label>
@@ -45,7 +51,8 @@
                :placeholder="placeholders.country" v-model="user.country">
       </div>
       <div class="row border-bottom">
-        <div class="col-12 col-md-6" style="margin-bottom: 6px;" v-if="$route.path.includes('edit')">
+        <div class="col-12 col-md-6" style="margin-bottom: 6px;"
+             v-if="$route.path.includes('edit')">
           <strong>Select friends from your country</strong>
         </div>
       </div>
@@ -58,13 +65,16 @@
           </div>
         </template>
       </div>
-      <div class="row alert" :class="{ 'alert-success': response.isGood, 'alert-danger': !response.isGood }"
+      <div class="row alert"
+           :class="{ 'alert-success': response.isGood, 'alert-danger': !response.isGood }"
            v-if="response.message.length > 0">
         <div class="col">{{ response.message }}</div>
       </div>
       <div class="row border-top border-info" style="padding: 12px 0;">
         <div class="col-6">
-          <button class="btn btn-primary" v-if="$route.path.includes('edit')" @click.prevent="updateUser">Edit</button>
+          <button class="btn btn-primary" v-if="$route.path.includes('edit')" @click.prevent="updateUser">
+            Edit
+          </button>
           <button class="btn btn-primary" v-else @click.prevent="createUser">Create</button>
         </div>
         <div class="col-6">
@@ -79,50 +89,49 @@
 
 <script>
 export default {
-  name: "UserEdit",
+  name: 'UserEdit',
   data() {
     return {
       user: {},
       response: {
         message: '',
-        isGood: false
+        isGood: false,
       },
       placeholders: {
         email: 'Enter email',
         firstName: 'Enter first name',
         lastName: 'Enter last name',
-        country: 'Enter country'
-      }
-    }
+        country: 'Enter country',
+      },
+    };
   },
   async created() {
     let friends = [];
     let user = {};
     if (this.$route.path.includes('edit')) {
-      user = await this.$store.dispatch('getUser', {login: this.$route.params['login']});
-      friends = await this.$store.dispatch('getUsersByCountry', {country: user['country']});
+      user = await this.$store.dispatch('getUser', { login: this.$route.params['login'] });
+      friends = await this.$store.dispatch('getUsersByCountry', { country: user.country });
       this._replacePlaceholders(user);
       this.user.friends = {};
       for (const mayFriend of friends) {
         if (mayFriend.login !== this.$route.params['login']) {
-          this.user['friends'][mayFriend.login] = false;
+          this.user.friends[mayFriend.login] = false;
         }
       }
       for (const realFriend of user.friends) {
         for (const mayFriend of friends) {
           if (realFriend === mayFriend.login) {
-            this.user['friends'][realFriend] = true;
+            this.user.friends[realFriend] = true;
             break;
           }
         }
       }
     }
-
   },
   methods: {
     _replacePlaceholders(user = this.user) {
-      let self = this;
-      let replace = function(key, u = this.user) {
+      const self = this;
+      const replace = function (key, u = this.user) {
         if (u[key] && u[key] !== '') {
           self.placeholders[key] = u[key];
         }
@@ -133,10 +142,10 @@ export default {
       replace('country', user);
     },
     async updateUser() {
-      console.log(this.user);
-      const res = await this.$store.dispatch('updateUser', {login: this.$route.params.login, updatedUser: this.user});
+      const res = await this.$store.dispatch('updateUser',
+          { login: this.$route.params['login'], updatedUser: this.user });
       this.response.isGood = false;
-      switch(res) {
+      switch (res) {
         case '200':
           this.response.isGood = true;
           this.response.message = 'Updating successful';
@@ -157,9 +166,9 @@ export default {
       }
     },
     async createUser() {
-      const res = await this.$store.dispatch('createUser', {login: this.user.login, newUser: this.user});
+      const res = await this.$store.dispatch('createUser', { login: this.user.login, newUser: this.user });
       this.response.isGood = false;
-      switch(res) {
+      switch (res) {
         case '200':
           this.response.isGood = true;
           this.response.message = 'Creating successful';
@@ -180,8 +189,8 @@ export default {
     goBack() {
       this.$router.push('../index');
     },
-  }
-}
+  },
+};
 </script>
 
 <style scoped>

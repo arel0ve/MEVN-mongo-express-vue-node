@@ -12,7 +12,7 @@
         <th scope="col">#</th>
         <td>Current user:</td>
         <td>
-          <router-link :to="$route.params.login">{{ user.login }}</router-link>
+          <router-link :to="$route.params['login']">{{ user.login }}</router-link>
         </td>
       </tr>
       <tr v-for="(val, key, index) in user" v-if="key !== 'friends'">
@@ -30,7 +30,7 @@
       <tr>
         <th scope="col">#</th>
         <td>
-          <router-link :to="'../' + 'edit/' + $route.params.login">Edit user</router-link>
+          <router-link :to="'../' + 'edit/' + $route.params['login']">Edit user</router-link>
         </td>
         <td>
           <router-link to="../index">Back</router-link>
@@ -45,12 +45,12 @@ export default {
   name: 'userView',
   data() {
     return {
-      user: {}
-    }
+      user: {},
+    };
   },
   async created() {
-    this.user = await this.$store.dispatch('getUser', {login: this.$route.params['login']});
-    this.user['country'] = this.user['country'].toUpperCase();
-  }
+    this.user = await this.$store.dispatch('getUser', { login: this.$route.params['login'] });
+    this.user.country = this.user.country.toUpperCase();
+  },
 };
 </script>
