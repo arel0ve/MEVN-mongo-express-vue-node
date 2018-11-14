@@ -117,6 +117,7 @@ export default {
       user = await this.$store.dispatch('getUser', { login: this.$route.params['login'] });
       friends = await this.$store.dispatch('getUsersByCountry', { country: user.country });
       this._replacePlaceholders(user);
+      this.user = _.cloneDeep(user);
       this.user.friends = {};
       for (const mayFriend of friends) {
         if (mayFriend.login !== this.$route.params['login']) {
@@ -131,7 +132,6 @@ export default {
           }
         }
       }
-      this.user = user;
       let day = new Date(this.user.birthday).getDate();
       day = day < 10 ? '0' + day : '' + day;
       let month = new Date(this.user.birthday).getMonth() + 1;
