@@ -10,7 +10,8 @@
         <div class="col-2">
           <button type="button" class="btn messages"
                   :class="{ 'btn-light': !user.inputMessages.length, 'btn-info': user.inputMessages.length}"
-                  title="input messages" style="padding: 0">
+                  :title="user.inputMessages.length ? user.inputMessages[user.inputMessages.length - 1].text : 'no messages'"
+                  style="padding: 0">
             <span>&#128172;</span>
             <sup>{{user.inputMessages.length }}</sup>
           </button>
@@ -59,14 +60,14 @@ export default {
 
     const ws = new WebSocket('ws://localhost:40510');
     ws.onmessage = (ev) => {
-      console.log(ev);
-      const message = ev.data;
-      const user = _.find(this.users, { login: message.login });
-      if (!user) {
-        return;
+      const message = JSON.parse(ev.data);
+      if (message.type === 'msg-send-ok') {
+        const user = _.find(this.users, { login: message.to });
+        if (!user) {
+          return;
+        }
+        user.inputMessages.push({ text: message.message });
       }
-
-      user.inputMessages.push(message.message);
     };
   },
   methods: {
