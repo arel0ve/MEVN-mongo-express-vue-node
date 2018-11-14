@@ -13,7 +13,7 @@ wss.on('connection', function (ws) {
   ws.on('close', function () {
     _.pull(connectedUsers, ws);
   });
-  
+
   ws.on('message', async function (msg) {
     try {
       const data = JSON.parse(msg);

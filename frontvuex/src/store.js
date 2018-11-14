@@ -16,7 +16,16 @@ export default new Vuex.Store({
     },
     changeUser(state, { login, newUser }) {
       const i = _.findIndex(state.users, { login });
-      state.users[i] = _.assign({ login }, newUser);
+      console.log(newUser);
+      state.users[i].login = login ? login : state.users[i].login;
+      state.users[i].email = newUser.email ? newUser.email : state.users[i].email;
+      state.users[i].fristName = newUser.firstName ? newUser.firstName : state.users[i].firstName;
+      state.users[i].lastName = newUser.lastName ? newUser.lastName : state.users[i].lastName;
+      state.users[i].birthday = newUser.birthday ? newUser.birthday : state.users[i].birthday;
+      state.users[i].country = newUser.country ? newUser.country : state.users[i].country;
+      state.users[i].country = newUser.country ? newUser.country : state.users[i].country;
+      state.users[i].friends = newUser.friends ? newUser.friends : state.users[i].friends;
+      state.users[i].messages = newUser.messages ? newUser.messages : state.users[i].messages;
     },
     deleteUser(state, { login }) {
       _.pullAllBy(state.users, [{ login }], 'login');
