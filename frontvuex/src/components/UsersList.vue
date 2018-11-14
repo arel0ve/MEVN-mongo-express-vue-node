@@ -50,6 +50,7 @@ export default {
       users: [],
       existsMoreUsers: true,
       errMessage: '',
+      ws: null,
     }
   },
   async created() {
@@ -58,8 +59,8 @@ export default {
       this.errMessage = 'There are not any users in user\'s list. Please, try again later';
     }
 
-    const ws = new WebSocket('ws://localhost:40510');
-    ws.onmessage = (ev) => {
+    this.ws = new WebSocket('ws://localhost:40510');
+    this.ws.onmessage = (ev) => {
       const message = JSON.parse(ev.data);
       if (message.type === 'msg-send-ok') {
         const user = _.find(this.users, { login: message.to });
@@ -69,6 +70,9 @@ export default {
         user.inputMessages.push({ text: message.message });
       }
     };
+  },
+  destroyed() {
+    this.ws.close();
   },
   methods: {
     async getMoreUsers() {

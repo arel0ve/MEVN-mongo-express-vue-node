@@ -41,15 +41,20 @@ export default {
         message: '',
         isGood: false,
       },
+      ws: null,
     };
   },
   async created() {
+    this.ws = new WebSocket('ws://localhost:40510');
     this.friends = await this.$store.dispatch('getFriendsByLogin', { login: this.$route.params['login'] });
+  },
+  destroyed() {
+    this.ws.close();
   },
   methods: {
     async sendMessage() {
       try {
-        const ws = new WebSocket('ws://localhost:40510');
+        console.log(this.ws);
 
         if (!this.toFriend || !this.message) {
           this.response.isGood = false;
@@ -57,15 +62,13 @@ export default {
           return;
         }
 
-        ws.onopen = () => {
-          ws.send(JSON.stringify({
-            from: this.$route.params['login'],
-            to: this.toFriend,
-            message: this.message
-          }));
-        };
+        this.ws.send(JSON.stringify({
+          from: this.$route.params['login'],
+          to: this.toFriend,
+          message: this.message
+        }));
 
-        ws.onmessage = (res) => {
+        this.ws.onmessage = (res) => {
           res = JSON.parse(res.data);
           this.response.isGood = res.type === 'msg-send-ok';
           this.response.message = res.type === 'msg-send-ok' ? 'Ok!' : res.message;
