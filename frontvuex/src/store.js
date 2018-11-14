@@ -16,7 +16,6 @@ export default new Vuex.Store({
     },
     changeUser(state, { login, newUser }) {
       const i = _.findIndex(state.users, { login });
-      console.log(newUser);
       state.users[i].login = login ? login : state.users[i].login;
       state.users[i].email = newUser.email ? newUser.email : state.users[i].email;
       state.users[i].fristName = newUser.firstName ? newUser.firstName : state.users[i].firstName;
