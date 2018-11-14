@@ -7,6 +7,8 @@ const mongoose = require('mongoose');
 
 const userRouter = require('./routes/user');
 
+const ws = require('./ws');
+
 const app = express();
 
 app.use(morgan('combined'));

@@ -8,7 +8,7 @@ async function getAllUsers(req, res, next) {
         .sort('login')
         .skip(+req.query['from'])
         .limit(+req.query['to'] - +req.query['from'])
-        .select('login -_id');
+        .select('login inputMessages outputMessages -_id');
     res.status(200).json(users);
   } catch (e) {
     console.log(e);
@@ -34,6 +34,28 @@ async function getUsersByCountry(req, res, next) {
         .sort('login')
         .select('login -_id');
     res.status(200).json(users);
+  } catch (e) {
+    console.log(e);
+    res.status(404).json({
+      message: 'Not Found'
+    });
+  }
+}
+
+async function getFriendsByLogin(req, res, next) {
+  try {
+    if (!req.query.login) {
+      throw new Error('404');
+    }
+    const user = await User.findOne({login: req.query.login})
+        .select('login friends -_id')
+        .populate('friends', 'login -_id');
+
+    if (!user) {
+      throw new Error('404');
+    }
+
+    res.status(200).json(user);
   } catch (e) {
     console.log(e);
     res.status(404).json({
@@ -189,12 +211,73 @@ async function deleteUserByLogin(req, res, next) {
   }
 }
 
+async function postMessageToLogin(req, res, next) {
+  try {
+    const data = JSON.parse(Object.keys(req.body)[0]);
+    if (!data.from || !data.to || !data.message) {
+      throw new Error('400');
+    }
+
+    const [userFrom, userTo] = await Promise.all([
+        User.findOne({login: data.from}),
+        User.findOne({login: data.to})
+    ]);
+
+    if (!userFrom || !userTo) {
+      throw new Error('404');
+    }
+
+    userFrom.outputMessages.push({
+      text: data.message,
+      from: userFrom.login,
+      to: userTo.login
+    });
+
+    userTo.inputMessages.push({
+      text: data.message,
+      from: userFrom.login,
+      to: userTo.login
+    });
+
+    await Promise.all([
+        userFrom.save(),
+        userTo.save()
+    ]);
+
+    res.status(200).json({
+      message: 'Ok!'
+    });
+
+  } catch (e) {
+    console.log(e);
+    switch(e.message) {
+      case '400':
+        res.status(400).json({
+          message: 'Got not from/to users'
+        });
+        break;
+      case '404':
+        res.status(404).json({
+          message: 'Users not found'
+        });
+        break;
+      default:
+        res.status(500).json({
+          message: 'Server error'
+        });
+        break;
+    }
+  }
+}
+
 
 module.exports = {
   getAllUsers,
   getUsersByCountry,
+  getFriendsByLogin,
   getUserByLogin,
   putUserByLogin,
   postUserByLogin,
-  deleteUserByLogin
+  deleteUserByLogin,
+  postMessageToLogin
 };

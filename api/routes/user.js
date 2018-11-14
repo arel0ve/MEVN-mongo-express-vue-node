@@ -5,6 +5,7 @@ const db = require('../queries/user');
 
 router.get('/users', db.getAllUsers);
 router.get('/users/by-country', db.getUsersByCountry);
+router.get('/users/friends', db.getFriendsByLogin);
 router.get('/user/:login', db.getUserByLogin);
 router.put('/user/:login', db.putUserByLogin);
 router.post('/user', db.postUserByLogin);

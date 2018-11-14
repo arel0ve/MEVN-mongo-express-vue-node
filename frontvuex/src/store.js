@@ -41,6 +41,16 @@ export default new Vuex.Store({
         return [];
       }
     },
+    async getFriendsByLogin(context, { login }) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/users/friends?login=${login}`);
+        const user = await res.json();
+        return user.friends;
+      } catch (e) {
+        console.error(e);
+        return [];
+      }
+    },
     async reload(context) {
       context.state.users = [];
       return await context.dispatch('getMoreUsers', {
@@ -57,7 +67,7 @@ export default new Vuex.Store({
         const res = await fetch(`http://localhost:3000/api/users?from=${from}&to=${to}`);
         const users = await res.json();
         for (const user of users) {
-          if (!_.find(context.state.users, { login: user.login })) {
+          if (!_.find([], { login: user.login })) {
             context.commit('addUser', user);
           }
         }

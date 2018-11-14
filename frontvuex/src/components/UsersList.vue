@@ -1,9 +1,19 @@
 <template>
   <div class="container">
       <div class="row" v-for="user of users">
-        <div class="col-6">{{ user.login }}</div>
+        <div class="col-4">
+          <router-link :to="'user/' + user.login">{{ user.login }}</router-link>
+        </div>
         <div class="col-2">
-          <router-link :to="'user/' + user.login">view</router-link>
+          <router-link :to="'write/' + user.login">&#128390;</router-link>
+        </div>
+        <div class="col-2">
+          <button type="button" class="btn messages"
+                  :class="{ 'btn-light': !user.inputMessages.length, 'btn-info': user.inputMessages.length}"
+                  title="input messages" style="padding: 0">
+            <span>&#128172;</span>
+            <sup>{{user.inputMessages.length }}</sup>
+          </button>
         </div>
         <div class="col-2">
           <router-link :to="'edit/' + user.login">edit</router-link>
@@ -46,6 +56,18 @@ export default {
     if (this.users.length === 0) {
       this.errMessage = 'There are not any users in user\'s list. Please, try again later';
     }
+
+    const ws = new WebSocket('ws://localhost:40510');
+    ws.onmessage = (ev) => {
+      console.log(ev);
+      const message = ev.data;
+      const user = _.find(this.users, { login: message.login });
+      if (!user) {
+        return;
+      }
+
+      user.inputMessages.push(message.message);
+    };
   },
   methods: {
     async getMoreUsers() {
