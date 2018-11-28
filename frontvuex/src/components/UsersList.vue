@@ -4,19 +4,17 @@
         <div class="col-4">
           <router-link :to="'user/' + user.login">{{ user.login }}</router-link>
         </div>
-        <div class="col-2">
-          <router-link :to="'write/' + user.login">&#128390;</router-link>
-        </div>
-        <div class="col-2">
+        <div class="col-3">
           <button type="button" class="btn messages"
                   :class="{ 'btn-light': !user.messages.length, 'btn-info': user.messages.length}"
                   :title="user.messages.length ? user.messages[user.messages.length - 1].text : 'no messages'"
-                  style="padding: 0">
+                  style="padding: 0"
+                  @click="goToChat(user.login)">
             <span>&#128172;</span>
             <sup>{{user.messages.length }}</sup>
           </button>
         </div>
-        <div class="col-2">
+        <div class="col-3">
           <router-link :to="'edit/' + user.login">edit</router-link>
         </div>
         <div class="col-2">
@@ -117,6 +115,9 @@ export default {
         this.errMessage = 'Something bad on server. Please, try again later';
       }
       await this.reload();
+    },
+    goToChat(login) {
+      this.$router.push(`write/${login}`);
     },
   },
 };
