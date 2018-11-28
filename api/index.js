@@ -5,7 +5,8 @@ const morgan = require('morgan');
 const config = require('./config/config');
 const mongoose = require('mongoose');
 
-const userRouter = require('./routes/user');
+const userRouter = require('./routes/user.router');
+const messageRouter = require('./routes/message.router');
 
 const ws = require('./ws');
 
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 
 app.use('/api', userRouter);
+app.use('/api', messageRouter);
 
 
 mongoose.connect(config.dbURL, config.options);
