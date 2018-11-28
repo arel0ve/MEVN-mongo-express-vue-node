@@ -12,6 +12,10 @@ const messageSchema = new mongoose.Schema({
   to: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
+  },
+  when: {
+    type: Date,
+    required: true
   }
 });
 

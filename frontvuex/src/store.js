@@ -12,6 +12,9 @@ export default new Vuex.Store({
   },
   mutations: {
     addUser(state, newUser) {
+      if (!newUser.messages) {
+        newUser.messages = [];
+      }
       state.users.push(newUser);
     },
     changeUser(state, { login, newUser }) {
@@ -31,6 +34,14 @@ export default new Vuex.Store({
     },
     nextStepLoadMore(state) {
       state.from += state.count;
+    },
+    addMessages(state, { login, messages }) {
+      const user = _.find(state.users, { login });
+      if (user) {
+        messages.forEach(message => {
+          user.messages.push(message);
+        })
+      }
     }
   },
   actions: {
@@ -39,6 +50,28 @@ export default new Vuex.Store({
         return context.state.users;
       }
       return await context.dispatch('getMoreUsers', {});
+    },
+    async getUsersMessagesWithInterlocutor(context, { login, interlocutor }) {
+      try {
+        let user = _.find(context.state.users, { login });
+        if (!user) {
+          user = await context.dispatch('getUser', { login });
+        }
+        if (user.messages.length > 0) {
+          const messages = _.filter(user.messages, { interlocutor });
+          if (messages.length > 0) {
+            return messages;
+          }
+        }
+        const res = await fetch(`http://localhost:3000/api/messages/${login}?interlocutor=${interlocutor}`);
+        let messages = await res.json();
+        messages = Array.isArray(messages) ? messages : [];
+        context.commit('addMessages', {login, messages});
+        return messages;
+      } catch(e) {
+        console.log(e);
+        return [];
+      }
     },
     async getUsersByCountry(context, { country }) {
       try {

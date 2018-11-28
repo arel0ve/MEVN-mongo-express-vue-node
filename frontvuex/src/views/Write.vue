@@ -5,9 +5,24 @@
         <div class="input-group-prepend">
           <label class="input-group-text" for="selectfriends">Message to:</label>
         </div>
-        <select class="custom-select" id="selectfriends" v-model="toFriend">
+        <select class="custom-select" id="selectfriends" v-model="toFriend" @change="onSelectInterlocutor">
           <option v-for="friend of friends" :value="friend.login">{{friend.login}}</option>
         </select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="input-group mb-3">
+        <div class="input-group-prepend">
+          <label class="input-group-text" for="dialogs">Previous dialogs:</label>
+        </div>
+        <div id="dialogs" class="dialogs">
+          <div v-for="msg of messages"
+               :class="{ 'msg-input': msg.type === 'in', 'msg-output': msg.type === 'out' }">
+            <span class="msg">
+              {{ msg.text }}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="row">
@@ -37,6 +52,7 @@ export default {
       friends: [],
       toFriend: '',
       message: '',
+      messages: [],
       response: {
         message: '',
         isGood: false,
@@ -54,7 +70,6 @@ export default {
   methods: {
     async sendMessage() {
       try {
-        console.log(this.ws);
 
         if (!this.toFriend || !this.message) {
           this.response.isGood = false;
@@ -70,19 +85,72 @@ export default {
 
         this.ws.onmessage = (res) => {
           res = JSON.parse(res.data);
-          this.response.isGood = res.type === 'msg-send-ok';
-          this.response.message = res.type === 'msg-send-ok' ? 'Ok!' : res.message;
-        }
+          // this.response.isGood = res.type === 'msg-send-ok';
+          // this.response.message = res.type === 'msg-send-ok' ? 'Ok!' : res.message;
+          this.messages.push({
+            interlocutor: res.to,
+            text: res.message,
+            type: 'out',
+            when: res.when
+          });
+          this.message = '';
+          this.$store.commit('addMessages', {
+            login: res.from,
+            messages: [{
+              interlocutor: res.to,
+              text: res.message,
+              type: 'out',
+              when: res.when
+            }],
+          });
+          this.$store.commit('addMessages', {
+            login: res.to,
+            messages: [{
+              interlocutor: res.from,
+              text: res.message,
+              type: 'in',
+              when: res.when
+            }],
+          });
+        };
 
       } catch (e) {
         this.response.isGood = false;
         this.response.message = `We can not send you message because of ${e.message}`;
       }
+    },
+    async onSelectInterlocutor() {
+      this.messages = await this.$store.dispatch('getUsersMessagesWithInterlocutor', {
+        login: this.$route.params['login'],
+        interlocutor: this.toFriend
+      });
     }
   }
 }
 </script>
 
 <style scoped>
-
+.input-group-text {
+  min-width: 150px;
+}
+.dialogs {
+  height: calc(100vh - 300px);
+  overflow-y: auto;
+  width: calc(100% - 150px);
+  padding: 12px;
+}
+.msg {
+  background: #cfe3fe;
+  padding: 12px;
+  border-radius: 6px;
+  margin: 6px;
+}
+.msg-input {
+  text-align: left;
+  margin: 18px 0;
+}
+.msg-output {
+  text-align: right;
+  margin: 18px 0;
+}
 </style>

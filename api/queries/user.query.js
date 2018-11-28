@@ -8,10 +8,47 @@ async function getAllUsers(req, res, next) {
         .sort('login')
         .skip(+req.query['from'])
         .limit(+req.query['to'] - +req.query['from'])
-        .select('login inputMessages outputMessages -_id')
-        .populate('inputMessages', 'text -_id')
-        .populate('outputMessages', 'text -_id');
-    res.status(200).json(users);
+        .select('login messages -_id')
+        .populate({
+          path: 'messages',
+          select: 'text from to when -_id',
+          populate: [{
+            path: 'from',
+            select: 'login -_id'
+          }, {
+            path: 'to',
+            select: 'login -_id'
+          }]
+        });
+
+    let result = [];
+    users.forEach(user => {
+      let messages = [];
+      user.messages.forEach(message => {
+        if (message.to.login === user.login) {
+          message = {
+            interlocutor: message.from.login,
+            text: message.text,
+            type: 'in',
+            when: message.when
+          };
+          messages.push(message);
+        } else if (message.from.login === user.login) {
+          message = {
+            interlocutor: message.to.login,
+            text: message.text,
+            type: 'out',
+            when: message.when
+          };
+          messages.push(message);
+        }
+      });
+      result.push({
+        login: user.login,
+        messages: messages
+      });
+    });
+    res.status(200).json(result);
   } catch (e) {
     console.log(e);
     res.status(404).json({

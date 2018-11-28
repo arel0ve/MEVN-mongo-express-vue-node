@@ -9,11 +9,11 @@
         </div>
         <div class="col-2">
           <button type="button" class="btn messages"
-                  :class="{ 'btn-light': !user.inputMessages.length, 'btn-info': user.inputMessages.length}"
-                  :title="user.inputMessages.length ? user.inputMessages[user.inputMessages.length - 1].text : 'no messages'"
+                  :class="{ 'btn-light': !user.messages.length, 'btn-info': user.messages.length}"
+                  :title="user.messages.length ? user.messages[user.messages.length - 1].text : 'no messages'"
                   style="padding: 0">
             <span>&#128172;</span>
-            <sup>{{user.inputMessages.length }}</sup>
+            <sup>{{user.messages.length }}</sup>
           </button>
         </div>
         <div class="col-2">
@@ -61,13 +61,31 @@ export default {
 
     this.ws = new WebSocket('ws://localhost:40510');
     this.ws.onmessage = (ev) => {
-      const message = JSON.parse(ev.data);
-      if (message.type === 'msg-send-ok') {
-        const user = _.find(this.users, { login: message.to });
+      const res = JSON.parse(ev.data);
+      if (res.type === 'msg-send-ok') {
+        const user = _.find(this.users, { login: res.to });
         if (!user) {
           return;
         }
-        user.inputMessages.push({ text: message.message });
+        user.messages.push({ text: res.message });
+        this.$store.commit('addMessages', {
+          login: res.from,
+          messages: [{
+            interlocutor: res.to,
+            text: res.message,
+            type: 'out',
+            when: res.when
+          }],
+        });
+        this.$store.commit('addMessages', {
+          login: res.to,
+          messages: [{
+            interlocutor: res.from,
+            text: res.message,
+            type: 'in',
+            when: res.when
+          }],
+        });
       }
     };
   },

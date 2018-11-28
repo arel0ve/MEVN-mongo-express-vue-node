@@ -33,14 +33,15 @@ wss.on('connection', function (ws) {
       let message = new Message({
         text: data.message,
         from: userFrom._id,
-        to: userTo._id
+        to: userTo._id,
+        when: Date.now()
       });
 
       message = await message.save();
 
-      userFrom.outputMessages.push(message._id);
+      userFrom.messages.push(message._id);
 
-      userTo.inputMessages.push(message._id);
+      userTo.messages.push(message._id);
 
       await Promise.all([
         userFrom.save(),
@@ -52,7 +53,8 @@ wss.on('connection', function (ws) {
           type: "msg-send-ok",
           from: data.from,
           to: data.to,
-          message: data.message
+          message: data.message,
+          when: Date.now()
         }));
       });
     } catch (e) {
